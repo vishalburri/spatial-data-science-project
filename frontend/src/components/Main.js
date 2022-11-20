@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import DeckGL from '@deck.gl/react';
-import StaticMap from 'react-map-gl';
+import {StaticMap} from 'react-map-gl';
 import { BASEMAP } from '@deck.gl/carto';
 import { useEffect, useState, useContext } from "react";
 import DataStore from '../stores/dataStore.ts';
