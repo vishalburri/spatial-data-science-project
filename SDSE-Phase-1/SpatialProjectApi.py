@@ -5,15 +5,20 @@ import glob
 import uuid
 import shutil
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
 
+CORS(app)
 
-@app.route('/loadTrajectoryData/', methods=['GET', 'POST'])
+@app.route('/loadTrajectoryData', methods=['POST'])
 def loadTrajectoryData():
     outputfilepath = uuid.uuid4().hex
-    data = request.args['inputpath']
-    inputfilepath="./data/simulated_trajectories.json"
+    inputfilepath = uuid.uuid4().hex
+    inputfilepath="./data/{}.json".format(inputfilepath)
+    jsonOutput = json.loads(request.data)
+    with open(inputfilepath, "w") as outfile:
+        json.dump(jsonOutput, outfile)
     command = "$SPARK_HOME/bin/spark-submit ./target/scala-2.12/SDSE-Phase-1-assembly-0.1.jar ./data/output/{} get-data {}".format(outputfilepath, inputfilepath)
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
@@ -26,22 +31,29 @@ def loadTrajectoryData():
                 jsonDict = json.loads(jsonObj)
                 outputList.append(jsonDict)
     shutil.rmtree("./data/output/{}".format(outputfilepath))
+    os.remove(inputfilepath)
     jsonOutput = json.dumps(outputList)
-    # with open("./data/output/sample.json", "w") as outfile:
-    #     outfile.write(jsonOutput)
     return jsonOutput
 
-@app.route('/getSpatialRange/', methods=['GET'])
+@app.route('/getSpatialRange', methods=['POST'])
 def getSpatialRange():
-    data = request.args
+    inputfilepath = uuid.uuid4().hex
+    outputfilepath = uuid.uuid4().hex
+
+    inputfilepath="./data/{}.json".format(inputfilepath)
+    data = json.loads(request.data)
+    body = data['body']
+
+    with open(inputfilepath, "w") as outfile:
+        json.dump(body, outfile)
+
     start_latitude = data['start_latitude']
     end_latitude = data['end_latitude']
     start_longitude = data['start_longitude']
     end_longitude = data['end_longitude']
-    inputfilepath = data['inputpath']
-    outputfilepath = uuid.uuid4().hex
 
     command = "$SPARK_HOME/bin/spark-submit ./target/scala-2.12/SDSE-Phase-1-assembly-0.1.jar ./data/output/{} get-spatial-range {} {} {} {} {}".format(outputfilepath,start_latitude,start_longitude,end_latitude,end_longitude,inputfilepath)
+    print(command)
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
     print(process.returncode)
@@ -54,20 +66,28 @@ def getSpatialRange():
                 jsonDict = json.loads(jsonObj)
                 outputList.append(jsonDict)
     shutil.rmtree("./data/output/{}".format(outputfilepath))
+    os.remove(inputfilepath)
     return json.dumps(outputList)    
 
-@app.route('/getSpatialTemporalRange/', methods=['GET'])
+@app.route('/getSpatialTemporalRange', methods=['POST'])
 def getSpatialTemporalRange():
-    data = request.args
-    start_time = data['start_time']
-    end_time = data['end_time']
+    inputfilepath = uuid.uuid4().hex
+    outputfilepath = uuid.uuid4().hex
+
+    inputfilepath="./data/{}.json".format(inputfilepath)
+    data = json.loads(request.data)
+    body = data['body']
+
+    with open(inputfilepath, "w") as outfile:
+        json.dump(body, outfile)
+
     start_latitude = data['start_latitude']
     end_latitude = data['end_latitude']
     start_longitude = data['start_longitude']
     end_longitude = data['end_longitude']
-    inputfilepath = data['inputpath']
-    outputfilepath = uuid.uuid4().hex
-
+    start_time = data['start_time']
+    end_time = data['end_time']
+    
     command = "$SPARK_HOME/bin/spark-submit ./target/scala-2.12/SDSE-Phase-1-assembly-0.1.jar ./data/output/{} get-spatiotemporal-range {} {} {} {} {} {} {}".format(outputfilepath,start_time, end_time,start_latitude,start_longitude,end_latitude,end_longitude,inputfilepath)
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
@@ -81,15 +101,24 @@ def getSpatialTemporalRange():
                 jsonDict = json.loads(jsonObj)
                 outputList.append(jsonDict)
     shutil.rmtree("./data/output/{}".format(outputfilepath))
+    os.remove(inputfilepath)
     return json.dumps(outputList)     
 
-@app.route('/getKNN/', methods=['GET'])
+@app.route('/getKNN', methods=['POST'])
 def getKNN():
-    data = request.args
-    trajectory_id = data['trajectory_id']
-    k = data['k']
-    inputfilepath = data['inputpath']
+    inputfilepath = uuid.uuid4().hex
     outputfilepath = uuid.uuid4().hex
+
+    inputfilepath="./data/{}.json".format(inputfilepath)
+    data = json.loads(request.data)
+    body = data['body']
+
+    with open(inputfilepath, "w") as outfile:
+        json.dump(body, outfile)
+
+    trajectory_id = data['trajectory_id']
+    k = data['knnK']
+
     command = "$SPARK_HOME/bin/spark-submit ./target/scala-2.12/SDSE-Phase-1-assembly-0.1.jar ./data/output/{} get-knn {} {} {}".format(outputfilepath,trajectory_id, k,inputfilepath)
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
@@ -103,6 +132,7 @@ def getKNN():
                 jsonDict = json.loads(jsonObj)
                 outputList.append(jsonDict)
     shutil.rmtree("./data/output/{}".format(outputfilepath))
+    os.remove(inputfilepath)
     return json.dumps(outputList)      
 
 app.run()
