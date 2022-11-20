@@ -4,9 +4,14 @@ import { observer } from "mobx-react-lite";
 import DataStore from '../stores/dataStore.ts';
 function SpatialRange({ title, minV, maxV, stepS, query }) {
     const getText = (value) => value;
-    const [inputVal, setInputVal] = useState(0);
+    const [textInput, setTextInput] = useState(0);
+
+    const handleTextInputChange = event => {
+        setTextInput(event.target.value);
+        changeValue(event, event.target.value);
+    };
     const changeValue = (event, value) => {
-        setInputVal(value);
+        setTextInput(value);
         if (query == 0) {
             if (title == "Min Latitude") { dataStore.setSRMinLatitude(value); }
             if (title == "Max Latitude") { dataStore.setSRMaxLatitude(value); }
@@ -26,6 +31,7 @@ function SpatialRange({ title, minV, maxV, stepS, query }) {
             if (title == "K") { dataStore.setknnK(value); }
         }
     }
+
     const dataStore = useContext(DataStore);
     return (
         <>
@@ -33,8 +39,8 @@ function SpatialRange({ title, minV, maxV, stepS, query }) {
                 <div> </div><br></br>
                 <span style={{ fontSize: 10, fontWeight: 'bold' }}>{title} : </span>
                 <TextField id="standard-basic" variant="standard"
-                    value={inputVal} inputProps={{ style: { color: "white", fontSize: 10, marginLeft: 10 } }}
-                    onChange={changeValue} />
+                    value={textInput} inputProps={{ style: { color: "white", fontSize: 10, marginLeft: 10 } }}
+                    onChange={handleTextInputChange} />
             </Typography>
             <Slider
                 size="small"
